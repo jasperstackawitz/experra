@@ -9,8 +9,15 @@ from openai import OpenAI
 load_dotenv()
 
 api_key = os.getenv("OPENAI_API_KEY")
+
 if not api_key:
-    st.error("OPENAI_API_KEY not found in .env file")
+    try:
+        api_key = st.secrets["OPENAI_API_KEY"]
+    except Exception:
+        api_key = None
+
+if not api_key:
+    st.error("OPENAI_API_KEY not found in .env file or Streamlit secrets")
     st.stop()
 
 client = OpenAI(api_key=api_key)
