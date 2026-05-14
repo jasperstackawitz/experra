@@ -1,153 +1,159 @@
-import os
-import tempfile
-
-import fitz
 import streamlit as st
-from dotenv import load_dotenv
-from openai import OpenAI
 
-load_dotenv()
+st.set_page_config(page_title="Experra", page_icon="📄", layout="wide")
 
-api_key = os.getenv("OPENAI_API_KEY")
+st.markdown("""
+<style>
+.block-container {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+    max-width: 1100px;
+}
 
-if not api_key:
-    try:
-        api_key = st.secrets["OPENAI_API_KEY"]
-    except Exception:
-        api_key = None
+.hero {
+    padding: 3rem 2rem;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #1e293b 0%, #312e81 100%);
+    border: 1px solid #475569;
+}
 
-if not api_key:
-    st.error("OPENAI_API_KEY not found in .env file or Streamlit secrets")
-    st.stop()
+.hero h1 {
+    font-size: 3.5rem;
+    line-height: 1.05;
+    margin-bottom: 1rem;
+    color: white;
+}
 
-client = OpenAI(api_key=api_key)
+.hero p {
+    font-size: 1.25rem;
+    color: #e2e8f0;
+}
 
-st.set_page_config(page_title="Experra", page_icon="📄")
-st.title("Experra")
-st.subheader("Turn academic research into clear, structured explanations.")
-st.write(
-    "Upload a PDF to get the paper's main problem, key idea, methods, results, limitations, and study flashcards."
-)
+.card {
+    padding: 1.5rem;
+    border-radius: 18px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
 
-def extract_text_from_pdf(uploaded_file) -> str:
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-        tmp_file.write(uploaded_file.read())
-        temp_path = tmp_file.name
+.card h3 {
+    color: white;
+}
 
-    doc = fitz.open(temp_path)
-    all_text = []
+.card p {
+    color: #cbd5e1;
+}
 
-    for page in doc:
-        text = page.get_text("text", sort=True)
-        all_text.append(text)
+.price {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+}
 
-    doc.close()
-    os.remove(temp_path)
+.small {
+    color: #cbd5e1;
+}
+section[data-testid="stSidebar"] {
+    display: none;
+}
+</style>
+""", unsafe_allow_html=True)
 
-    return "\n".join(all_text)
+st.markdown("""
+<div class="hero">
+    <h1>Understand research papers in minutes.</h1>
+    <p>
+    Experra turns dense academic PDFs into clear explanations, study guides,
+    flashcards, and key insights instantly.
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
-def chunk_text(text: str, max_chars: int = 12000):
-    chunks = []
-    start = 0
-    while start < len(text):
-        end = start + max_chars
-        chunks.append(text[start:end])
-        start = end
-    return chunks
+st.write("")
 
-def summarize_chunk(chunk: str) -> str:
-    prompt = f"""
-You are helping a student understand a research paper.
+if st.button("Try Experra Free", type="primary", use_container_width=True):
+    st.switch_page("pages/1_Analyze_Paper.py")
 
-Analyze this paper excerpt and extract:
-1. Main problem or question
-2. Key idea
-3. Methods used
-4. Main results
-5. Limitations
-6. Important technical terms
+st.write("")
+st.write("")
 
-Be accurate. If something is unclear, say so.
+col1, col2, col3 = st.columns(3)
 
-Paper excerpt:
-{chunk[:8000]}
-"""
-    try:
-        response = client.responses.create(
-            model="gpt-4.1-mini",
-            input=prompt
-        )
-        return response.output_text
-    except Exception as e:
-        return f"Error analyzing chunk: {str(e)}"
+with col1:
+    st.markdown("""
+    <div class="card">
+        <h3>Clear summaries</h3>
+        <p class="small">Get the main problem, thesis, contribution, and results without decoding academic jargon.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
+with col2:
+    st.markdown("""
+    <div class="card">
+        <h3>Study guides</h3>
+        <p class="small">Turn papers into structured notes, explanations, and review materials for class or research.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-def build_final_summary(chunk_summaries):
-    joined = "\n\n".join(chunk_summaries)
+with col3:
+    st.markdown("""
+    <div class="card">
+        <h3>Flashcards</h3>
+        <p class="small">Automatically generate review questions so you actually remember what the paper said.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    prompt = f"""
-Combine the following partial paper analyses into one final report.
+st.write("")
+st.write("")
 
-Use these headings:
-# Paper Overview
-# Problem
-# Key Idea
-# Methods
-# Results
-# Limitations
-# Important Terms
-# 5 Quick Study Flashcards
+st.header("How it works")
 
-Keep it clear and useful for a student.
+a, b, c = st.columns(3)
 
-Partial analyses:
-{joined}
-"""
-    try:
-        response = client.responses.create(
-            model="gpt-4.1-mini",
-            input=prompt
-        )
-        return response.output_text
-    except Exception as e:
-        return f"Error building final summary: {str(e)}"
+with a:
+    st.markdown("### 1. Upload")
+    st.write("Drop in any academic PDF.")
+
+with b:
+    st.markdown("### 2. Analyze")
+    st.write("Experra breaks the paper into understandable sections.")
+
+with c:
+    st.markdown("### 3. Study")
+    st.write("Get summaries, flashcards, limitations, and key insights.")
+
+st.write("")
 st.divider()
 
-uploaded_file = st.file_uploader("Upload a PDF", type=["pdf"])
+left, right = st.columns([1.2, 1])
 
-if uploaded_file is not None:
-    st.success(f"Uploaded: {uploaded_file.name}")
+with left:
+    st.header("Built for students and researchers")
+    st.write(
+        "Whether you're reading papers for class, joining a lab, preparing for a journal club, "
+        "or trying to understand a field faster, Experra helps you move from PDF overload to usable understanding."
+    )
 
-    if st.button("Analyze Paper"):
-        with st.spinner("Extracting text from PDF..."):
-            text = extract_text_from_pdf(uploaded_file)
+with right:
+    st.markdown("""
+    <div class="card">
+        <h3>Free</h3>
+        <div class="price">$0</div>
+        <p class="small">3 paper analyses</p>
+        <hr>
+        <p>✓ Paper summaries</p>
+        <p>✓ Study guides</p>
+        <p>✓ Flashcards</p>
+        <p>✓ Downloadable analysis</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-        if not text.strip():
-            st.error("Could not extract text from this PDF.")
-        else:
-            st.info(f"Extracted approximately {len(text):,} characters.")
+st.write("")
+st.write("")
 
-            with st.spinner("Breaking paper into chunks..."):
-                chunks = chunk_text(text)
-
-            st.write(f"Number of chunks: {len(chunks)}")
-
-            chunk_summaries = []
-
-            for i, chunk in enumerate(chunks, start=1):
-                with st.spinner(f"Analyzing chunk {i}/{len(chunks)}..."):
-                    chunk_summary = summarize_chunk(chunk)
-                    chunk_summaries.append(chunk_summary)
-
-            with st.spinner("Building final report..."):
-                final_summary = build_final_summary(chunk_summaries)
-
-            st.subheader("Final Analysis")
-            st.markdown(final_summary)
-
-            st.download_button(
-                label="Download Analysis as TXT",
-                data=final_summary,
-                file_name="paper_analysis.txt",
-                mime="text/plain"
-            )
+if st.button("Start analyzing papers", type="primary"):
+    st.switch_page("pages/1_Analyze_Paper.py")
