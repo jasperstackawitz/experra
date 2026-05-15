@@ -179,7 +179,7 @@ def extract_text_from_pdf(uploaded_file) -> str:
     return "\n".join(all_text)
 
 
-def chunk_text(text: str, max_chars: int = 12000):
+def chunk_text(text: str, max_chars: int = 40000):
     chunks = []
     start = 0
 
@@ -252,6 +252,37 @@ Partial analyses:
     except Exception:
         return "Error building final summary. Please try again."
 
+def analyze_full_paper(text: str) -> str:
+    prompt = f"""
+You are Experra, a research tutor helping a student understand an academic paper.
+
+Analyze this academic paper and produce:
+
+# Paper Overview 
+# Research Question 
+# Why This Matters 
+# Key Contribution
+# Methods Explained Simply
+# Key Results
+# Limitations
+# Important Terms
+# 3 Quiz Questions
+# 5 Study Flashcards
+# Explain Like I'm Five
+
+Keep it clear and useful for a student. Don't make it overly fancy. Incorporate direct/simple explanations when needed to build up to understanding and using the right vocabulary.
+
+Paper:
+{text[:100000]}
+"""
+    try:
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=prompt
+        )
+        return response.output_text
+    except Exception:
+        return "Analysis temporarily unavailable. Please try again."
 
 def format_qa_history(qa_history):
     if not qa_history:
@@ -349,24 +380,31 @@ if uploaded_file is not None:
         else:
             status_placeholder.caption(f"Extracted approximately {len(text):,} characters.")
 
-            chunks = chunk_text(text)
-            status_placeholder.caption(f"Paper split into {len(chunks)} section(s).")
+            if len(text) <= 100000:
+                button_status("Analyzing paper... 50%")
+                status_placeholder.caption("Using fast analysis mode for this paper...")
 
-            chunk_summaries = []
+                final_summary = analyze_full_paper(text)
 
-            for i, chunk in enumerate(chunks, start=1):
-                percent = int((i / len(chunks)) * 80)
+            else:
+                chunks = chunk_text(text)
+                status_placeholder.caption(f"Large paper detected. Split into {len(chunks)} section(s).")
 
-                button_status(f"Analyzing... {percent}%")
-                status_placeholder.caption(f"Analyzing section {i}/{len(chunks)}...")
+                chunk_summaries = []
 
-                chunk_summary = summarize_chunk(chunk)
-                chunk_summaries.append(chunk_summary)
+                for i, chunk in enumerate(chunks, start=1):
+                    percent = int((i / len(chunks)) * 80)
 
-            button_status("Building final report... 90%")
-            status_placeholder.caption("Building final study report...")
+                    button_status(f"Analyzing... {percent}%")
+                    status_placeholder.caption(f"Analyzing section {i}/{len(chunks)}...")
 
-            final_summary = build_final_summary(chunk_summaries)
+                    chunk_summary = summarize_chunk(chunk)
+                    chunk_summaries.append(chunk_summary)
+
+                button_status("Building final report... 90%")
+                status_placeholder.caption("Building final study report...")
+
+                final_summary = build_final_summary(chunk_summaries)
 
             button_status("Analysis Complete ✓")
             status_placeholder.empty()
@@ -375,8 +413,6 @@ if uploaded_file is not None:
             st.session_state.paper_text = text
             st.session_state.final_summary = final_summary
             st.session_state.qa_history = []
-            st.session_state.suggested_question = ""
-
             st.write("")
             st.markdown("""
             <div class="hero">

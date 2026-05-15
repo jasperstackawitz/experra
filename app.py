@@ -57,6 +57,21 @@ st.markdown("""
 .small {
     color: #cbd5e1;
 }
+div.stButton > button {
+    background: linear-gradient(135deg, #ff4d4f 0%, #ff6b6b 100%);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 1.1rem 2.2rem;
+    font-weight: 700;
+    font-size: 1.2rem;
+    transition: 0.2s ease;
+}
+div.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(255, 77, 79, 0.3);
+    color: white;
+}
 section[data-testid="stSidebar"] {
     display: none;
 }
@@ -138,6 +153,11 @@ with left:
         "or trying to understand a field faster, Experra helps you move from PDF overload to usable understanding."
     )
 
+    st.write("")
+
+    if st.button("Start analyzing papers →", type="primary", use_container_width=False):
+        st.switch_page("pages/1_Analyze_Paper.py")
+
 with right:
     st.markdown("""
     <div class="card">
@@ -151,9 +171,3 @@ with right:
         <p>✓ Downloadable analysis</p>
     </div>
     """, unsafe_allow_html=True)
-
-st.write("")
-st.write("")
-
-if st.button("Start analyzing papers", type="primary"):
-    st.switch_page("pages/1_Analyze_Paper.py")
