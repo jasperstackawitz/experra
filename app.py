@@ -58,18 +58,19 @@ st.markdown("""
     color: #cbd5e1;
 }
 div.stButton > button {
-    background: linear-gradient(135deg, #ff4d4f 0%, #ff6b6b 100%);
+    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
     color: white;
     border: none;
     border-radius: 16px;
     padding: 1.1rem 2.2rem;
     font-weight: 700;
     font-size: 1.2rem;
-    transition: 0.2s ease;
+    transition: all 0.2s ease;
 }
+
 div.stButton > button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(255, 77, 79, 0.3);
+    box-shadow: 0 12px 30px rgba(79, 70, 229, 0.35);
     color: white;
 }
 section[data-testid="stSidebar"] {
